@@ -1,0 +1,11 @@
+#body { height: 1fr; }
+#sidebar { width: 50; border-right: solid; }
+ProjectItem { height: auto; padding: 1 0; width: 100%; }
+.side-title { text-align: center; }
+#refresh { width: 100%; }
+#results { padding: 1 2; }
+#msg { color: $warning; padding: 0 2; }
+.project-radial { width: 100%; height: auto;  }
+.section-radial { width: 100%; height: auto; }
+.pin-toggle { margin: 1 2 0 2; }
+.open-things { margin: 1 2; }
