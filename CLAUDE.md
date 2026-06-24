@@ -12,13 +12,13 @@ There is no system `python` on this machine — use the venv interpreter directl
 .venv/bin/textual run --dev app.py   # live CSS hot-reload (needs textual-dev)
 ```
 
-`textual run app.py` also launches the TUI. Dependencies (`requirements.txt`): `textual`, `things.py`.
+`textual run app.py` also launches the TUI. Dependencies (`requirements.txt`): `textual`, `things.py`, `textual-dev` (`rich` comes in via `textual`).
 
 ## Testing
 
-Tests live in `test_data.py` (`test()`) and run via `python test_data.py`. Plain `assert`s, no framework — it imports only the pure layers (`data.py`, `radial.py`), so it runs without Textual or a Things database. When adding non-trivial logic, extend `test()` rather than introducing a test framework.
+Tests live in `test_data.py` (`test()`) and run via `python test_data.py`. Plain `assert`s, no framework — it imports only the pure layers (`lib/data.py`, `lib/progress.py`), so it runs without Textual or a Things database. When adding non-trivial logic, extend `test()` rather than introducing a test framework.
 
-For UI behavior, drive the app headless with Textual's `run_test()` / `Pilot` (stub `fetch_project`/`fetch_by_uuid` and point `app._STORE` at a tmp file to avoid touching the real DB or `pinned.json`).
+For UI behavior, drive the app headless with Textual's `run_test()` / `Pilot`. Stub `app.fetch_project` / `app.fetch_by_uuid` (they're imported into the `app` namespace) and point `lib.storage.STORE` at a tmp file to avoid touching the real DB or `pinned.json`. Note: thread workers need a few `await pilot.pause()` + `asyncio.sleep` cycles to land, and `pilot.press("enter")` on a programmatically-set `Input` can be flaky — calling the worker method directly (e.g. `app.do_search("x")`) is more reliable in tests.
 
 ## Architecture
 
@@ -27,7 +27,7 @@ For UI behavior, drive the app headless with Textual's `run_test()` / `Pilot` (s
 - **`lib/data.py`** — Things data layer: `group_todos` buckets to-dos by heading and computes ratios; `_progress_for` / `fetch_project` / `fetch_by_uuid` pull from Things; `things_url`.
 - **`lib/progress.py`** — pure horizontal bar renderer: `render_bar` + `BAR_W` / `SIDE_BAR_W` widths.
 - **`lib/storage.py`** — `pinned.json` persistence (the file lives in `lib/`, beside `storage.py`): `load_pinned` / `save_pinned`.
-- **`app.py`** — Textual UI only: `ThingsApp`, `RadialProgress`, `ProjectItem`. Imports `lib.*` explicitly.
+- **`app.py`** — Textual UI only: `ThingsApp`, `ProgressDisplay` (Static wrapping `render_bar`), `ProjectItem`. Imports `lib.*` explicitly.
 - **`test_data.py`** — self-check over `lib/data.py` + `lib/progress.py`.
 
 Keep the pure/UI boundary: anything that doesn't need Textual goes in `lib/` so it stays testable headless. `app.py` is the only module that imports `textual`.
@@ -43,6 +43,6 @@ Key facts that aren't obvious from reading one module:
 
 ## Textual gotchas (learned here)
 
-- **Never reuse a fixed `id` on a widget that gets remounted.** `remove_children()` is async and isn't awaited, so a rapid re-render can mount the new widget before the old one is gone → `DuplicateIds`. Use a `class` and match on it instead. This bit us on the headings grid and the Things/pin buttons.
+- **Never reuse a fixed `id` on a widget that gets remounted.** The detail view (`_show_detail`) calls `results.remove_children()` then mounts fresh widgets on every search/select/refresh. `remove_children()` is async and isn't awaited, so a rapid re-render can mount the new widget before the old one is gone → `DuplicateIds`. Use a `class` and match on it (e.g. `has_class("open-things")`) instead of an `id`.
 - **Quit.** `ctrl+q` is bound to `quit` with `priority=True` so it fires even when the `Input` is focused. `ctrl+c` is left to Textual's default, which shows a "Press ctrl+q to quit" toast (`action_help_quit` scans for a binding whose action is literally `"quit"`).
 - **`cmd+r` and similar can't reach a terminal TUI** — refresh is a button, not a keybinding.
