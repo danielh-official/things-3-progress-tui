@@ -225,8 +225,8 @@ try:  # Textual is optional for the self-check
         BINDINGS = [Binding("ctrl+q", "quit", "Quit", priority=True)]
         CSS = """
         #body { height: 1fr; }
-        #sidebar { width: 36; border-right: solid $panel; }
-        ProjectItem { height: auto; padding: 1 0; }
+        #sidebar { width: 50; border-right: solid $panel; }
+        ProjectItem { height: auto; padding: 1 0; width: 100%; content-align: center middle; }
         .side-title { text-align: center; }
         #refresh { width: 100%; }
         #results { padding: 1 2; }
