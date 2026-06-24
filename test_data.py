@@ -1,6 +1,6 @@
 """Self-check for the pure layers (no Things/Textual needed). Run: python test_data.py"""
 from lib.data import group_todos, things_url, NO_HEADING
-from lib.radial import ring_cell, W, H
+from lib.progress import render_bar
 
 
 def test():
@@ -28,19 +28,10 @@ def test():
     _, ov2 = group_todos([{"status": "canceled", "heading_title": None}], [])
     assert ov2 == {"done": 0, "total": 0, "ratio": 0.0}, ov2
 
-    # Radial fill extremes.
-    full = [ring_cell(c, r, 1.0) for r in range(H) for c in range(W)]
-    none = [ring_cell(c, r, 0.0) for r in range(H) for c in range(W)]
-    ring = [x for x in full if x is not None]
-    assert ring and all(x == "filled" for x in ring), "progress=1.0 must fill ring"
-    ring0 = [x for x in none if x is not None]
-    assert ring0 and all(x == "empty" for x in ring0), "progress=0.0 must empty ring"
-
-    # Compact (sidebar) radial geometry still forms a ring and fills fully.
-    cw, ch = 13, 7
-    comp = [ring_cell(c, r, 1.0, cw, ch) for r in range(ch) for c in range(cw)]
-    cring = [x for x in comp if x is not None]
-    assert cring and all(x == "filled" for x in cring), "compact ring must fill"
+    # Bar fill extremes and a midpoint.
+    assert render_bar(1.0, "", 10).plain.startswith("█" * 10), "ratio=1.0 must fill bar"
+    assert "█" not in render_bar(0.0, "", 10).plain, "ratio=0.0 must empty bar"
+    assert render_bar(0.5, "", 10).plain.startswith("█" * 5 + "░" * 5), "ratio=0.5 must half-fill"
 
     assert things_url("ABC123") == "things:///show?id=ABC123"
 

@@ -14,22 +14,22 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
-from textual.widgets import Button, Footer, Header, Input, ListItem, ListView, Static
+from textual.widgets import Button, Footer, Header, Input, ListItem, ListView, Rule, Static
 
 from lib.data import fetch_by_uuid, fetch_project, things_url
-from lib.radial import H, SIDE_H, SIDE_W, W, render_radial
+from lib.progress import BAR_W, SIDE_BAR_W, render_bar
 from lib.storage import load_pinned, save_pinned
 
 
-class RadialProgress(Static):
-    DEFAULT_CSS = "RadialProgress { width: auto; height: auto; content-align: center middle; }"
+class ProgressDisplay(Static):
+    DEFAULT_CSS = "ProgressDisplay { width: auto; height: auto; }"
 
-    def __init__(self, progress=0.0, label="", w=W, h=H):
+    def __init__(self, ratio=0.0, label="", width=BAR_W):
         super().__init__()
-        self._progress, self._label, self._w, self._h = progress, label, w, h
+        self._ratio, self._label, self._width = ratio, label, width
 
     def render(self):
-        return render_radial(self._progress, self._label, self._w, self._h)
+        return render_bar(self._ratio, self._label, self._width)
 
 
 class ProjectItem(ListItem):
@@ -42,8 +42,8 @@ class ProjectItem(ListItem):
         self._ratio, self._done, self._total = ratio, done, total
 
     def compose(self) -> ComposeResult:
-        yield RadialProgress(self._ratio, "", SIDE_W, SIDE_H)
-        yield Static(f"{self.proj_title}\n{self._done}/{self._total}", classes="side-title")
+        yield Static(f"{self.proj_title} ({self._done}/{self._total})", classes="side-title")
+        yield ProgressDisplay(self._ratio, "", SIDE_BAR_W)
 
 
 class ThingsApp(App):
@@ -140,17 +140,23 @@ class ThingsApp(App):
         results.remove_children()
         results.mount(
             Static(
-                render_radial(overall["ratio"], f"{title} ({overall['done']}/{overall['total']})"),
-                classes="project-radial",
+                render_bar(overall["ratio"], f"{title} ({overall['done']}/{overall['total']})"),
+                classes="project-bar",
             )
         )
+        results.mount(Rule())
         for b in buckets:
             results.mount(
-                RadialProgress(b["ratio"], f"{b['title']} {b['done']}/{b['total']}").add_class("section-radial")
+                ProgressDisplay(b["ratio"], f"{b['title']} {b['done']}/{b['total']}").add_class("section-bar")
             )
         pinned = any(f["uuid"] == uuid for f in self._pinned)
-        results.mount(Button(self._pin_label(pinned), classes="pin-toggle"))
-        results.mount(Button("↗ Open in Things 3", classes="open-things", variant="primary"))
+        results.mount(
+            Horizontal(
+                Button(self._pin_label(pinned), classes="pin-toggle"),
+                Button("↗ Open in Things 3", classes="open-things", variant="primary"),
+                classes="actions",
+            )
+        )
 
     @staticmethod
     def _pin_label(pinned: bool) -> str:

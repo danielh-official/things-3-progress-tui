@@ -25,10 +25,10 @@ For UI behavior, drive the app headless with Textual's `run_test()` / `Pilot` (s
 `app.py` + `app.tcss` live at the repo root; the modules it depends on are the `lib/` package:
 
 - **`lib/data.py`** — Things data layer: `group_todos` buckets to-dos by heading and computes ratios; `_progress_for` / `fetch_project` / `fetch_by_uuid` pull from Things; `things_url`.
-- **`lib/radial.py`** — pure ASCII ring renderer: `ring_cell` / `render_radial` + geometry constants.
+- **`lib/progress.py`** — pure horizontal bar renderer: `render_bar` + `BAR_W` / `SIDE_BAR_W` widths.
 - **`lib/storage.py`** — `pinned.json` persistence (the file lives in `lib/`, beside `storage.py`): `load_pinned` / `save_pinned`.
 - **`app.py`** — Textual UI only: `ThingsApp`, `RadialProgress`, `ProjectItem`. Imports `lib.*` explicitly.
-- **`test_data.py`** — self-check over `lib/data.py` + `lib/radial.py`.
+- **`test_data.py`** — self-check over `lib/data.py` + `lib/progress.py`.
 
 Keep the pure/UI boundary: anything that doesn't need Textual goes in `lib/` so it stays testable headless. `app.py` is the only module that imports `textual`.
 
@@ -36,7 +36,7 @@ Key facts that aren't obvious from reading one module:
 
 - **Data source.** Reads the Things 3 SQLite DB through the `things.py` library, *not* AppleScript — AppleScript's dictionary has no heading class, so to-dos can't be grouped by heading. `things.todos(...)` defaults to `status='incomplete'`; pass `status=None` to include completed/canceled, otherwise `done` counts are always 0.
 - **Heading buckets.** `NO_HEADING = "Root"` is the bucket for to-dos with no heading; it's forced first and dropped only if empty when other headings exist. `canceled` to-dos are excluded from totals; `completed` count as done.
-- **Radial widget.** `ring_cell`/`render_radial` take `w,h` so the same renderer draws the full detail ring (`W,H = 21,11`) and the compact sidebar ring (`SIDE_W,SIDE_H = 13,7`). The x-axis is halved to correct for ~2:1 terminal cell aspect.
+- **Progress bar.** `render_bar(ratio, label, width)` returns Rich `Text` (optional dim label line + filled/empty bar + percent). `BAR_W` is the detail width, `SIDE_BAR_W` the compact sidebar width. Wrapped by the `ProgressDisplay` Static widget in `app.py`.
 - **Persistence.** Pinned projects are stored as `lib/pinned.json` (beside `storage.py`), a list of `{"uuid","title"}`. Search and pin are separate actions: searching only shows a project; the detail view's toggle button pins/unpins it. `refresh_sidebar` re-fetches live titles from Things and rewrites `pinned.json` when a title changed.
 - **Threading.** DB fetches run in `@work(thread=True, exclusive=True)` workers (grouped `sidebar`/`search`/`detail`); they update the UI via `self.call_from_thread(...)`.
 - **macOS only.** Things 3 is macOS/iOS. The "Open in Things 3" button shells out to `open things:///show?id=<uuid>` (Things URL scheme via `things_url`).
