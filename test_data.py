@@ -1,6 +1,6 @@
 """Self-check for the pure layers (no Things/Textual needed). Run: python test_data.py"""
-from data import group_todos, things_url, NO_HEADING
-from radial import ring_cell, W, H
+from lib.data import group_todos, things_url, NO_HEADING
+from lib.radial import ring_cell, W, H
 
 
 def test():

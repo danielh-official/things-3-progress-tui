@@ -16,9 +16,9 @@ from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Input, ListItem, ListView, Static
 
-from data import fetch_by_uuid, fetch_project, things_url
-from radial import H, SIDE_H, SIDE_W, W, render_radial
-from storage import load_pinned, save_pinned
+from lib.data import fetch_by_uuid, fetch_project, things_url
+from lib.radial import H, SIDE_H, SIDE_W, W, render_radial
+from lib.storage import load_pinned, save_pinned
 
 
 class RadialProgress(Static):
