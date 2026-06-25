@@ -1,7 +1,7 @@
 """
 Updates the detail view of the application with project data.
 """
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List
 
 from textual.containers import Horizontal, VerticalScroll
 from textual.widgets import Button, Rule, Static
@@ -16,7 +16,8 @@ def show_detail(
     app: "ThingsApp",
     uuid: str,
     title: str,
-    buckets: list[dict[str, int]], overall: dict[str, int]
+    buckets: List[Dict[str, int]],
+    overall: Dict[str, int],
 ) -> None:
     """Update the detail view with the project data."""
     app.current_uuid = uuid
