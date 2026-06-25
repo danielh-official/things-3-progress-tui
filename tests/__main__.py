@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib
 import pkgutil
+import sys
 import traceback
 from pathlib import Path
 
@@ -42,8 +43,16 @@ def _iter_test_callables(module):
             yield name, fn
 
 
+def _ensure_project_root_on_sys_path() -> None:
+    """Ensure imports like ``tests.test_data`` resolve for ``python tests`` too."""
+    project_root = str(Path(__file__).resolve().parent.parent)
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+
 def main() -> int:
     """Run all tests in the tests package."""
+    _ensure_project_root_on_sys_path()
     package_name = __package__ or "tests"
     modules = _iter_test_modules()
 
