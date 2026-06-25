@@ -2,3 +2,4 @@ textual
 things.py
 textual-dev
 pytest-watch
+platformdirs

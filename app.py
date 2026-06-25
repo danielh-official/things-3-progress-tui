@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+from pathlib import Path
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -24,7 +25,8 @@ class ThingsApp(App):
     # ctrl+q quits (priority so it fires even with the Input focused). ctrl+c
     # keeps Textual's default toast pointing here ("Press ctrl+q to quit").
     BINDINGS = [Binding("ctrl+q", "quit", "Quit", priority=True)]
-    CSS_PATH = "app.tcss"  # external for live hot-reload: textual run --dev app.py
+    # Resolve CSS by absolute path so installed console scripts can find it.
+    CSS_PATH = str(Path(__file__).with_name("app.tcss"))
     TITLE = "Things Project Progress"
 
     def __init__(self):
@@ -82,5 +84,10 @@ class ThingsApp(App):
         self.query_one("#msg", Static).update(msg)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Console entrypoint used by package scripts."""
     ThingsApp().run()
+
+
+if __name__ == "__main__":
+    main()
