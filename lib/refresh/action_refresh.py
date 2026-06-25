@@ -4,7 +4,7 @@ It is used to update the user interface with the latest data from Things.
 from typing import TYPE_CHECKING
 
 from lib.open_project import open_project
-from lib.refresh import refresh_sidebar
+from lib.refresh.refresh_sidebar import refresh_sidebar
 
 if TYPE_CHECKING:
     from app import ThingsApp

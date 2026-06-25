@@ -15,11 +15,11 @@ from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Input, ListView, Static
 
-from lib.action_refresh import action_refresh
+from lib.refresh.action_refresh import action_refresh
 from lib.data import things_url
 from lib.open_project import open_project
 from lib.pin import pin_label
-from lib.refresh import refresh_sidebar
+from lib.refresh.refresh_sidebar import refresh_sidebar
 from lib.search import do_search
 from lib.storage import load_pinned, save_pinned
 from lib.project import ProjectItem

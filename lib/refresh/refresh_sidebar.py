@@ -1,13 +1,12 @@
 """
 This module contains functions to refresh the sidebar and populate it with project items.
 """
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from textual import work
-from textual.widgets import ListView
 
 from lib.data import fetch_by_uuid
-from lib.project import ProjectItem
+from lib.refresh.populate_sidebar import populate_sidebar
 from lib.storage import save_pinned
 
 if TYPE_CHECKING:
@@ -27,10 +26,3 @@ def refresh_sidebar(app: "ThingsApp") -> None:
     if changed:
         save_pinned(app.pinned)
     app.call_from_thread(populate_sidebar, app, items)
-
-def populate_sidebar(app: "ThingsApp", items: list[tuple[str, str, dict[str, Any]]]) -> None:
-    """Populate the sidebar ListView with the given project items."""
-    lv = app.query_one("#sidebar", ListView)
-    lv.clear()
-    for uuid, title, ov in items:
-        lv.append(ProjectItem(uuid, title, ov["ratio"], ov["done"], ov["total"]))
