@@ -1,9 +1,14 @@
-"""Self-check for the pure layers (no Things/Textual needed). Run: python test_data.py"""
+"""
+Self-check for the pure layers (no Things/Textual needed). 
+Run: `.venv/bin/python -m tests.test_data`
+"""
+
 from lib.data import group_todos, things_url, NO_HEADING
 from lib.progress import render_bar
 
 
 def test():
+    """Self-check for the pure layers (no Things/Textual needed)."""
     todos = [
         {"status": "completed", "heading_title": "Design"},
         {"status": "incomplete", "heading_title": "Design"},
