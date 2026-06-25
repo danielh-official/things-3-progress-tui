@@ -1,6 +1,6 @@
 # Things 3 Progress TUI
 
-![screenshot](screenshot.png)
+![screenshot](https://github.com/danielh-official/things-3-progress-tui/blob/main/screenshot.png)
 
 Are you:
 
