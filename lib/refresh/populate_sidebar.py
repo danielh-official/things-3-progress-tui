@@ -13,4 +13,4 @@ def populate_sidebar(app: "ThingsApp", items: List[Tuple[str, str, Dict[str, Any
     lv = app.query_one("#sidebar", ListView)
     lv.clear()
     for uuid, title, ov in items:
-        lv.append(ProjectItem(uuid, title, ov["ratio"], ov["done"], ov["total"]))
+        lv.append(ProjectItem(uuid, title, ov))
