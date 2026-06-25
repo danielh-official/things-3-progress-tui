@@ -35,6 +35,13 @@ Activate in Terminal with:
 things-progress
 ```
 
+1. Type a project name from Things 3 into the search bar and hit enter.
+2. Click "Pin to sidebar" to pin the project to the sidebar.
+
+That's it! You can now see the progress of your Things 3 projects and their headings in a terminal-based UI.
+
+Click "Open in Things 3" at any time to open the project in Things 3.
+
 ## Developing
 
 To get started, clone and run the app in your terminal emulator of choice (I recommend [Ghostty](https://github.com/ghostty-org/ghostty)):
