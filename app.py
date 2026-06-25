@@ -10,14 +10,17 @@ from __future__ import annotations
 
 import subprocess
 
-from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
-from textual.widgets import Button, Footer, Header, Input, ListView, Rule, Static
+from textual.widgets import Button, Footer, Header, Input, ListView, Static
 
-from lib.data import fetch_by_uuid, fetch_project, things_url
-from lib.progress import render_bar, ProgressDisplay
+from lib.action_refresh import action_refresh
+from lib.data import things_url
+from lib.open_project import open_project
+from lib.pin import pin_label
+from lib.refresh import refresh_sidebar
+from lib.search import do_search
 from lib.storage import load_pinned, save_pinned
 from lib.project import ProjectItem
 
@@ -32,13 +35,13 @@ class ThingsApp(App):
 
     def __init__(self):
         super().__init__()
-        self._pinned = load_pinned()  # [{"uuid","title"}]
-        self._current_uuid = None
-        self._current_title = None
+        self.pinned = load_pinned()  # [{"uuid","title"}]
+        self.current_uuid: str | None = None
+        self.current_title: str | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Button("⟳ Refresh all", id="refresh")
+        yield Button("⟳ Refresh all", id="refresh", variant="primary")
         yield Input(placeholder="Project name… (Enter to search)", id="search")
         yield Static("", id="msg")
         with Horizontal(id="body"):
@@ -48,40 +51,13 @@ class ThingsApp(App):
 
     def on_mount(self) -> None:
         """Populate the sidebar with pinned projects on startup."""
-        self.refresh_sidebar()
-
-    def action_refresh(self) -> None:
-        """Re-fetch sidebar radials and the open detail view from Things."""
-        self.refresh_sidebar()
-        if self._current_uuid:
-            self.open_project(self._current_uuid)
+        refresh_sidebar(self)
 
     # -- sidebar -------------------------------------------------------
-    @work(thread=True, exclusive=True, group="sidebar")
-    def refresh_sidebar(self) -> None:
-        """Re-fetch pinned projects from Things and update the sidebar."""
-        items = []
-        changed = False
-        for f in self._pinned:
-            title, _, overall = fetch_by_uuid(f["uuid"])  # live title from Things
-            if title != f["title"]:  # title renamed in Things -> persist it
-                f["title"] = title
-                changed = True
-            items.append((f["uuid"], title, overall))
-        if changed:
-            save_pinned(self._pinned)
-        self.call_from_thread(self._populate_sidebar, items)
-
-    def _populate_sidebar(self, items) -> None:
-        lv = self.query_one("#sidebar", ListView)
-        lv.clear()
-        for uuid, title, ov in items:
-            lv.append(ProjectItem(uuid, title, ov["ratio"], ov["done"], ov["total"]))
-
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle sidebar selection: open the project detail view for the selected project."""
         if isinstance(event.item, ProjectItem):
-            self.open_project(event.item.uuid)
+            open_project(self, event.item.uuid)
 
     # -- search --------------------------------------------------------
     def on_input_submitted(self, event: Input.Submitted) -> None:
@@ -89,72 +65,27 @@ class ThingsApp(App):
         name = event.value.strip()
         if name:
             self.query_one("#msg", Static).update("Searching…")
-            self.do_search(name)
-
-    @work(thread=True, exclusive=True, group="search")
-    def do_search(self, name: str) -> None:
-        """Fetch the project by name and show its detail view."""
-        uuid, title, buckets, overall = fetch_project(name)
-        self.call_from_thread(self._show_detail, uuid, title, buckets, overall)
+            do_search(self, name)
 
     # -- detail --------------------------------------------------------
-    @work(thread=True, exclusive=True, group="detail")
-    def open_project(self, uuid: str) -> None:
-        """Fetch the project by UUID and show its detail view."""
-        title, buckets, overall = fetch_by_uuid(uuid)
-        self.call_from_thread(self._show_detail, uuid, title, buckets, overall)
-
-    def _show_detail(self, uuid, title, buckets, overall) -> None:
-        """Update the detail view with the project data."""
-        self._current_uuid = uuid
-        self._current_title = title
-        self.query_one("#msg", Static).update("")
-        results = self.query_one("#results", VerticalScroll)
-        results.remove_children()
-        results.mount(
-            Static(
-                render_bar(overall["ratio"], f"{title} ({overall['done']}/{overall['total']})"),
-                classes="project-bar",
-            )
-        )
-        results.mount(Rule())
-        for b in buckets:
-            results.mount(
-                ProgressDisplay(b["ratio"], f"{b['title']} {b['done']}/{b['total']}")
-                    .add_class("section-bar")
-            )
-        pinned = any(f["uuid"] == uuid for f in self._pinned)
-        results.mount(
-            Horizontal(
-                Button(self._pin_label(pinned), classes="pin-toggle"),
-                Button("↗ Open in Things 3", classes="open-things", variant="primary"),
-                classes="actions",
-            )
-        )
-
-    @staticmethod
-    def _pin_label(pinned: bool) -> str:
-        """Return the label for the pin/unpin button based on whether the project is pinned."""
-        return "★ Unpin" if pinned else "☆ Pin to sidebar"
-
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses for refresh, open in Things, and pin/unpin actions."""
         if event.button.id == "refresh":
-            self.action_refresh()
+            action_refresh(self)
             return
-        if not self._current_uuid:
+        if not self.current_uuid:
             return
         if event.button.has_class("open-things"):
-            subprocess.run(["open", things_url(self._current_uuid)], check=False)
+            subprocess.run(["open", things_url(self.current_uuid)], check=False)
         elif event.button.has_class("pin-toggle"):
-            pinned = any(f["uuid"] == self._current_uuid for f in self._pinned)
+            pinned = any(f["uuid"] == self.current_uuid for f in self.pinned)
             if pinned:
-                self._pinned = [f for f in self._pinned if f["uuid"] != self._current_uuid]
+                self.pinned = [f for f in self.pinned if f["uuid"] != self.current_uuid]
             else:
-                self._pinned.append({"uuid": self._current_uuid, "title": self._current_title})
-            save_pinned(self._pinned)
-            self.refresh_sidebar()
-            event.button.label = self._pin_label(not pinned)
+                self.pinned.append({"uuid": self.current_uuid, "title": self.current_title})
+            save_pinned(self.pinned)
+            refresh_sidebar(self)
+            event.button.label = pin_label(not pinned)
 
     def _show_error(self, msg: str) -> None:
         self.query_one("#msg", Static).update(msg)
