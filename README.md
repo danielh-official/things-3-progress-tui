@@ -17,6 +17,17 @@ Install from PyPI:
 
 ```bash
 pip install things-3-progress-tui
+```
+
+or Homebrew:
+
+```bash
+brew install danielh-official/tap/things-3-progress-tui
+```
+
+Activate with:
+
+```bash
 things-progress
 ```
 
