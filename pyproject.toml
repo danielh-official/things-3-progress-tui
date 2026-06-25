@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling>=1.26.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "things-3-progress-tui"
+version = "0.0.1"
+description = "A Textual TUI that shows progress bars for Things 3 projects and headings"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "danielh-official" }]
+keywords = ["things3", "things", "textual", "tui", "macos"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Office/Business",
+  "Topic :: Terminals",
+]
+dependencies = [
+  "textual",
+  "things.py",
+  "platformdirs",
+]
+
+[project.urls]
+Homepage = "https://github.com/danielh-official/things-3-progress-tui"
+Repository = "https://github.com/danielh-official/things-3-progress-tui"
+Issues = "https://github.com/danielh-official/things-3-progress-tui/issues"
+
+[project.scripts]
+things-progress = "app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lib"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"app.py" = "app.py"
+"app.tcss" = "app.tcss"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "app.py",
+  "app.tcss",
+  "lib",
+  "tests",
+  "README.md",
+  "LICENSE",
+  "requirements.txt",
+]

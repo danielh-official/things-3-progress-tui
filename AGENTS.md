@@ -46,3 +46,18 @@ Key facts that aren't obvious from reading one module:
 - **Never reuse a fixed `id` on a widget that gets remounted.** The detail view (`_show_detail`) calls `results.remove_children()` then mounts fresh widgets on every search/select/refresh. `remove_children()` is async and isn't awaited, so a rapid re-render can mount the new widget before the old one is gone → `DuplicateIds`. Use a `class` and match on it (e.g. `has_class("open-things")`) instead of an `id`.
 - **Quit.** `ctrl+q` is bound to `quit` with `priority=True` so it fires even when the `Input` is focused. `ctrl+c` is left to Textual's default, which shows a "Press ctrl+q to quit" toast (`action_help_quit` scans for a binding whose action is literally `"quit"`).
 - **`cmd+r` and similar can't reach a terminal TUI** — refresh is a button, not a keybinding.
+
+## Publish To PyPI
+
+This repository is set up for trusted publishing via GitHub Actions in `.github/workflows/publish-pypi.yml`.
+
+1. Create a release in GitHub.
+2. The workflow builds and uploads the package to PyPI.
+
+For a local preflight before releasing:
+
+```bash
+.venv/bin/python -m pip install --upgrade build twine
+.venv/bin/python -m build
+.venv/bin/python -m twine check dist/*
+```

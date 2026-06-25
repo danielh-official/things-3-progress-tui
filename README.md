@@ -11,10 +11,19 @@ Are you:
 
 Then this TUI is for you!
 
-## Developing
+## Install
+
+Install from PyPI:
+
+```bash
+pip install things-3-progress-tui
+things-progress
+```
 
 > [!NOTE]
-> Must have Things installed for this to work. This is a Mac-only app.
+> This app is macOS-only and requires Things 3 to be installed.
+
+## Developing
 
 To get started, clone and run the app in your terminal emulator of choice (I recommend [Ghostty](https://github.com/ghostty-org/ghostty)):
 
