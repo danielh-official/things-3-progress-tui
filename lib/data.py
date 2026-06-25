@@ -1,3 +1,4 @@
+"""Data layer: Things project fetching and heading-bucket grouping (pure where possible)."""
 # ---------------------------------------------------------------------------
 # Data layer (pure where possible)
 # ---------------------------------------------------------------------------
