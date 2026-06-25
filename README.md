@@ -21,3 +21,9 @@ To get started, clone and run the app in your terminal emulator of choice (I rec
 ```bash
 .venv/bin/textual run --dev app.py
 ```
+
+For live reloading, you can use `ptw` (pytest-watch) to watch for changes and run the app:
+
+```bash
+ptw --runner "textual run --dev app.py"
+```
