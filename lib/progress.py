@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from rich.text import Text
+from textual.widgets import Static
 
 BAR_W = 36       # detail / overall bar width in cells
 SIDE_BAR_W = 18  # compact sidebar bar
@@ -17,3 +18,14 @@ def render_bar(ratio, label="", width=BAR_W):
     text.append("░" * (width - filled), style="grey37")
     text.append(f" {round(ratio * 100)}%", style="bold")
     return text
+
+class ProgressDisplay(Static):
+    """A horizontal progress bar with optional label."""
+    DEFAULT_CSS = "ProgressDisplay { width: auto; height: auto; }"
+
+    def __init__(self, ratio=0.0, label="", width=BAR_W):
+        super().__init__()
+        self._ratio, self._label, self._width = ratio, label, width
+
+    def render(self):
+        return render_bar(self._ratio, self._label, self._width)

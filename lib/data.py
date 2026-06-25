@@ -57,13 +57,11 @@ def _ratio(done, total):
 
 def _progress_for(uuid):
     """Grouped progress for a project uuid -> (buckets, overall)."""
+    # pylint: disable=import-outside-toplevel
     import things  # imported here so the self-check runs without Things installed
 
     todos = things.todos(project=uuid, status=None)  # status=None -> include completed/canceled
-    try:
-        headings = things.tasks(type="heading", project=uuid)
-    except Exception:
-        headings = []
+    headings = things.tasks(type="heading", project=uuid)
     return group_todos(todos, headings)
 
 
@@ -73,6 +71,7 @@ def fetch_project(name):
     Returns (uuid, title, heading_buckets, overall). Raises ValueError with a
     friendly message if not found / DB unreadable.
     """
+    # pylint: disable=import-outside-toplevel
     import things
 
     name_l = name.strip().lower()
@@ -90,13 +89,14 @@ def fetch_project(name):
 
 def fetch_by_uuid(uuid):
     """Grouped progress for a known project uuid -> (title, buckets, overall)."""
+    # pylint: disable=import-outside-toplevel
     import things
 
     proj = things.get(uuid)
     if not proj:
         raise ValueError(f"Project {uuid!r} not found in Things.")
     buckets, overall = _progress_for(uuid)
-    return proj.get("title", uuid), buckets, overall
+    return proj.get("title", uuid), buckets, overall # type: ignore
 
 
 def things_url(uuid):

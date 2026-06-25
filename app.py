@@ -14,39 +14,16 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
-from textual.widgets import Button, Footer, Header, Input, ListItem, ListView, Rule, Static
+from textual.widgets import Button, Footer, Header, Input, ListView, Rule, Static
 
 from lib.data import fetch_by_uuid, fetch_project, things_url
-from lib.progress import BAR_W, SIDE_BAR_W, render_bar
+from lib.progress import render_bar, ProgressDisplay
 from lib.storage import load_pinned, save_pinned
-
-
-class ProgressDisplay(Static):
-    DEFAULT_CSS = "ProgressDisplay { width: auto; height: auto; }"
-
-    def __init__(self, ratio=0.0, label="", width=BAR_W):
-        super().__init__()
-        self._ratio, self._label, self._width = ratio, label, width
-
-    def render(self):
-        return render_bar(self._ratio, self._label, self._width)
-
-
-class ProjectItem(ListItem):
-    """Sidebar entry: compact radial + title, carries the project uuid."""
-
-    def __init__(self, uuid, title, ratio, done, total):
-        super().__init__()
-        self.uuid = uuid
-        self.proj_title = title
-        self._ratio, self._done, self._total = ratio, done, total
-
-    def compose(self) -> ComposeResult:
-        yield Static(f"{self.proj_title} ({self._done}/{self._total})", classes="side-title")
-        yield ProgressDisplay(self._ratio, "", SIDE_BAR_W)
+from lib.project import ProjectItem
 
 
 class ThingsApp(App):
+    """Textual TUI for Things 3 project progress."""
     # ctrl+q quits (priority so it fires even with the Input focused). ctrl+c
     # keeps Textual's default toast pointing here ("Press ctrl+q to quit").
     BINDINGS = [Binding("ctrl+q", "quit", "Quit", priority=True)]
@@ -70,6 +47,7 @@ class ThingsApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Populate the sidebar with pinned projects on startup."""
         self.refresh_sidebar()
 
     def action_refresh(self) -> None:
@@ -81,13 +59,11 @@ class ThingsApp(App):
     # -- sidebar -------------------------------------------------------
     @work(thread=True, exclusive=True, group="sidebar")
     def refresh_sidebar(self) -> None:
+        """Re-fetch pinned projects from Things and update the sidebar."""
         items = []
         changed = False
         for f in self._pinned:
-            try:
-                title, _, overall = fetch_by_uuid(f["uuid"])  # live title from Things
-            except Exception:  # noqa: BLE001 - skip projects that vanished
-                continue
+            title, _, overall = fetch_by_uuid(f["uuid"])  # live title from Things
             if title != f["title"]:  # title renamed in Things -> persist it
                 f["title"] = title
                 changed = True
@@ -103,11 +79,13 @@ class ThingsApp(App):
             lv.append(ProjectItem(uuid, title, ov["ratio"], ov["done"], ov["total"]))
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
+        """Handle sidebar selection: open the project detail view for the selected project."""
         if isinstance(event.item, ProjectItem):
             self.open_project(event.item.uuid)
 
     # -- search --------------------------------------------------------
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Handle search input submission: fetch the project by name and show its detail view."""
         name = event.value.strip()
         if name:
             self.query_one("#msg", Static).update("Searching…")
@@ -115,24 +93,19 @@ class ThingsApp(App):
 
     @work(thread=True, exclusive=True, group="search")
     def do_search(self, name: str) -> None:
-        try:
-            uuid, title, buckets, overall = fetch_project(name)
-        except Exception as e:  # noqa: BLE001 - surface fetch error to UI
-            self.call_from_thread(self._show_error, str(e))
-            return
+        """Fetch the project by name and show its detail view."""
+        uuid, title, buckets, overall = fetch_project(name)
         self.call_from_thread(self._show_detail, uuid, title, buckets, overall)
 
     # -- detail --------------------------------------------------------
     @work(thread=True, exclusive=True, group="detail")
     def open_project(self, uuid: str) -> None:
-        try:
-            title, buckets, overall = fetch_by_uuid(uuid)
-        except Exception as e:  # noqa: BLE001
-            self.call_from_thread(self._show_error, str(e))
-            return
+        """Fetch the project by UUID and show its detail view."""
+        title, buckets, overall = fetch_by_uuid(uuid)
         self.call_from_thread(self._show_detail, uuid, title, buckets, overall)
 
     def _show_detail(self, uuid, title, buckets, overall) -> None:
+        """Update the detail view with the project data."""
         self._current_uuid = uuid
         self._current_title = title
         self.query_one("#msg", Static).update("")
@@ -147,7 +120,8 @@ class ThingsApp(App):
         results.mount(Rule())
         for b in buckets:
             results.mount(
-                ProgressDisplay(b["ratio"], f"{b['title']} {b['done']}/{b['total']}").add_class("section-bar")
+                ProgressDisplay(b["ratio"], f"{b['title']} {b['done']}/{b['total']}")
+                    .add_class("section-bar")
             )
         pinned = any(f["uuid"] == uuid for f in self._pinned)
         results.mount(
@@ -160,9 +134,11 @@ class ThingsApp(App):
 
     @staticmethod
     def _pin_label(pinned: bool) -> str:
+        """Return the label for the pin/unpin button based on whether the project is pinned."""
         return "★ Unpin" if pinned else "☆ Pin to sidebar"
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle button presses for refresh, open in Things, and pin/unpin actions."""
         if event.button.id == "refresh":
             self.action_refresh()
             return
