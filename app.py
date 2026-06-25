@@ -53,13 +53,11 @@ class ThingsApp(App):
         """Populate the sidebar with pinned projects on startup."""
         refresh_sidebar(self)
 
-    # -- sidebar -------------------------------------------------------
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle sidebar selection: open the project detail view for the selected project."""
         if isinstance(event.item, ProjectItem):
             open_project(self, event.item.uuid)
 
-    # -- search --------------------------------------------------------
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle search input submission: fetch the project by name and show its detail view."""
         name = event.value.strip()
@@ -67,7 +65,6 @@ class ThingsApp(App):
             self.query_one("#msg", Static).update("Searching…")
             do_search(self, name)
 
-    # -- detail --------------------------------------------------------
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses for refresh, open in Things, and pin/unpin actions."""
         if event.button.id == "refresh":
