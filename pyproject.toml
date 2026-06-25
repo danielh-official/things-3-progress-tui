@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "things-3-progress-tui"
-version = "0.0.2"
+version = "0.0.3"
 description = "A Textual TUI that shows progress bars for Things 3 projects and headings"
 readme = "README.md"
 requires-python = ">=3.11"
