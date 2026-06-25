@@ -20,8 +20,7 @@ pip install things-3-progress-tui
 things-progress
 ```
 
-> [!NOTE]
-> This app is macOS-only and requires Things 3 to be installed.
+**Note**: This app is macOS-only and requires Things 3 to be installed.
 
 ## Developing
 
