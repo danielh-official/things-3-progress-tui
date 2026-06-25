@@ -1,10 +1,4 @@
 """Things 3 project progress TUI.
-
-Type a project name -> fetch its headings + to-dos from the Things DB (via
-things.py) -> show a circular progress radial for the project and one per heading.
-
-Run `python app.py` to launch (`textual run app.py` also works).
-Pure logic lives in data.py / radial.py; tests in test_data.py.
 """
 from __future__ import annotations
 
