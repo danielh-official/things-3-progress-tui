@@ -13,6 +13,8 @@ Then this TUI is for you!
 
 ## Install
 
+**Note**: This app is macOS-only and requires Things 3 to be installed.
+
 Install from PyPI:
 
 ```bash
@@ -25,13 +27,13 @@ or Homebrew:
 brew install danielh-official/tap/things-3-progress-tui
 ```
 
-Activate with:
+## How To Use
+
+Activate in Terminal with:
 
 ```bash
 things-progress
 ```
-
-**Note**: This app is macOS-only and requires Things 3 to be installed.
 
 ## Developing
 
